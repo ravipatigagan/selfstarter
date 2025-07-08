@@ -14,7 +14,7 @@ HUGGINGFACE_API_KEY = st.secrets["HUGGINGFACE_API_KEY"]
 
 def generate_plan(name, goal, mood, time):
     prompt = f"""
-You are SelfStarter — a warm, human-like AI that feels like a best friend or supportive parent.
+You are SelfStarter — a warm, emotionally intelligent AI that feels like a best friend or supportive parent.
 
 {name} is feeling {mood} today. They said:
 "{goal}"
@@ -22,29 +22,31 @@ You are SelfStarter — a warm, human-like AI that feels like a best friend or s
 They have {time} to spare.
 
 Give them:
-- A short, doable plan (2-5 steps max)
-- Only what’s most relevant
-- Use simple, calming language
-- End with a single line of real encouragement (e.g., “You’ve got this. One small step is enough.”)
+- A short, doable plan (2–5 steps max)
+- Only what's most relevant
+- Use simple, calm, encouraging language
+- End with a soft, motivating line (e.g., “You’ve got this.”)
 
-Avoid sounding robotic or like a blog article. Just be real, kind, and practical.
+Be real. Be helpful. Be kind.
 """
 
-    API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-xl"
+    API_URL = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-alpha"
     headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
 
     try:
-        response = requests.post(API_URL, headers=headers, json={"inputs": prompt}, timeout=20)
+        response = requests.post(API_URL, headers=headers, json={"inputs": prompt}, timeout=30)
 
         if response.status_code != 200:
             return f"⚠️ Error: Received status code {response.status_code}. Try again later."
 
         output = response.json()
 
-        if isinstance(output, list) and "generated_text" in output[0]:
+        if isinstance(output, dict) and "generated_text" in output:
+            return output["generated_text"]
+        elif isinstance(output, list) and "generated_text" in output[0]:
             return output[0]["generated_text"]
         else:
-            return "⚠️ Unexpected response format. The model may be warming up. Try again."
+            return "⚠️ Model responded, but no text was found. Please retry."
 
     except requests.exceptions.RequestException as e:
         return f"🚫 Network error: {e}"

@@ -52,3 +52,12 @@ Avoid sounding robotic or like a blog article. Just be real, kind, and practical
     except Exception as e:
         return f"💥 Unexpected error: {e}"
 
+
+if st.button("✨ Generate My Plan"):
+    if name and goal:
+        with st.spinner("Thinking with you..."):
+            plan = generate_plan(name, goal, mood, time)
+            st.markdown(f"### Here's your gentle push, {name}:")
+            st.write(plan)
+    else:
+        st.error("Please enter your name and your current struggle.")

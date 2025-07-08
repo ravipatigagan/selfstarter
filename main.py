@@ -2,23 +2,28 @@ import streamlit as st
 import requests
 import os
 
-st.set_page_config(page_title="SelfStarter")
-st.title("🧠 SelfStarter – Your AI for Actionable Clarity")
+st.set_page_config(page_title="SelfStarter", page_icon="✨")
+st.title("✨ SelfStarter")
+st.subheader("Your gentle AI that gives you kind, doable next steps 💛")
 
-name = st.text_input("What’s your name?")
-goal = st.text_area("What’s something you’re stuck or confused about?")
-mood = st.radio("How are you feeling today?", ["Confused", "Low Energy", "Anxious", "Neutral", "Focused"])
-time = st.selectbox("How much time do you have today?", ["15 min", "30 min", "1 hour", "2+ hours"])
+# Input fields
+name = st.text_input("Your Name", placeholder="e.g., Priyansha")
+goal = st.text_area("What's on your mind?", placeholder="e.g., I want to restart my project but feel stuck.")
+mood = st.selectbox("How are you feeling?", ["", "Confident", "Clueless", "Low", "Anxious", "Motivated", "Burnt out", "Excited", "Tired", "Overwhelmed"])
+time = st.selectbox("How much time do you have?", ["", "5 minutes", "15 minutes", "30 minutes", "45 minutes", "1 hour", "More than 1 hour"])
 
-HUGGINGFACE_API_KEY = st.secrets["HUGGINGFACE_API_KEY"]
+# Load OpenRouter API Key from secrets
+API_KEY = st.secrets.get("OPENROUTER_API_KEY", "")
 
-def generate_plan(name, goal, mood, time):
-    import requests
+# Generate button
+if st.button("✨ Generate My Plan") and all([name, goal, mood, time]):
 
-    prompt = f"""
+    with st.spinner("Crafting your gentle plan..."):
+
+        prompt = f"""
 You are SelfStarter — a warm, emotionally intelligent AI that feels like a best friend or supportive parent.
 
-{name} is feeling {mood} today. They said:
+{name} is feeling {mood.lower()} today. They said:
 "{goal}"
 
 They have {time} to spare.
@@ -29,34 +34,28 @@ Give them:
 - End with a gentle motivating message (e.g., “You’ve got this.”)
 """
 
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "HTTP-Referer": "https://your-app-url.com",  # Use your Replit or localhost here
-        "Content-Type": "application/json"
-    }
+        headers = {
+            "Authorization": f"Bearer {API_KEY}",
+            "HTTP-Referer": "https://your-replit-url.replit.app",  # replace with your Replit URL if hosted
+            "Content-Type": "application/json"
+        }
 
-    data = {
-        "model": "mistral/mistral-7b-instruct",
-        "messages": [{"role": "user", "content": prompt}]
-    }
+        data = {
+            "model": "mistral/mistral-7b-instruct",
+            "messages": [{"role": "user", "content": prompt}]
+        }
 
-    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
+        try:
+            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
+            if response.status_code != 200:
+                st.error(f"⚠️ API Error {response.status_code}. Try again later.")
+            else:
+                plan = response.json()['choices'][0]['message']['content']
+                st.markdown("#### Your Personalized Plan 🪄")
+                st.success(plan.strip())
 
-    if response.status_code != 200:
-        return f"⚠️ Error: Received status code {response.status_code}. Try again."
+        except Exception as e:
+            st.error(f"💥 Something went wrong: {e}")
 
-    try:
-        return response.json()['choices'][0]['message']['content']
-    except Exception as e:
-        return f"💥 Parsing Error: {e}"
-
-
-
-if st.button("✨ Generate My Plan"):
-    if name and goal:
-        with st.spinner("Thinking with you..."):
-            plan = generate_plan(name, goal, mood, time)
-            st.markdown(f"### Here's your gentle push, {name}:")
-            st.write(plan)
-    else:
-        st.error("Please enter your name and your current struggle.")
+elif st.button("✨ Generate My Plan"):
+    st.warning("Please fill in all the fields before generating your plan.")

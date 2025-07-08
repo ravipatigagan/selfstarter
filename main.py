@@ -30,7 +30,7 @@ Give them:
 Be real. Be helpful. Be kind.
 """
 
-    API_URL = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-alpha"
+    API_URL = "https://api-inference.huggingface.co/models/bigscience/bloomz-560m"
     headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
 
     try:

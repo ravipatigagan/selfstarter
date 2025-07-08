@@ -30,13 +30,12 @@ Give them:
 Avoid sounding robotic or like a blog article. Just be real, kind, and practical.
 """
 
-    API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
+    API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-xl"
     headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
 
     try:
         response = requests.post(API_URL, headers=headers, json={"inputs": prompt}, timeout=20)
 
-        # Check if response is valid JSON
         if response.status_code != 200:
             return f"⚠️ Error: Received status code {response.status_code}. Try again later."
 
@@ -45,12 +44,13 @@ Avoid sounding robotic or like a blog article. Just be real, kind, and practical
         if isinstance(output, list) and "generated_text" in output[0]:
             return output[0]["generated_text"]
         else:
-            return "⚠️ Unexpected response format. The model may be warming up. Try again in a few seconds."
+            return "⚠️ Unexpected response format. The model may be warming up. Try again."
 
     except requests.exceptions.RequestException as e:
         return f"🚫 Network error: {e}"
     except Exception as e:
         return f"💥 Unexpected error: {e}"
+
 
 
 if st.button("✨ Generate My Plan"):

@@ -15,12 +15,12 @@ time = st.selectbox("How much time do you have?", ["", "5 minutes", "15 minutes"
 # Load OpenRouter API Key from secrets
 API_KEY = st.secrets.get("OPENROUTER_API_KEY", "")
 
-# Generate button
-if st.button("✨ Generate My Plan") and all([name, goal, mood, time]):
+# Handle Generate button with validation
+if st.button("✨ Generate My Plan"):
+    if all([name, goal, mood, time]):
+        with st.spinner("Crafting your gentle plan..."):
 
-    with st.spinner("Crafting your gentle plan..."):
-
-        prompt = f"""
+            prompt = f"""
 You are SelfStarter — a warm, emotionally intelligent AI that feels like a best friend or supportive parent.
 
 {name} is feeling {mood.lower()} today. They said:
@@ -34,28 +34,27 @@ Give them:
 - End with a gentle motivating message (e.g., “You’ve got this.”)
 """
 
-        headers = {
-            "Authorization": f"Bearer {API_KEY}",
-            "HTTP-Referer": "https://your-replit-url.replit.app",  # replace with your Replit URL if hosted
-            "Content-Type": "application/json"
-        }
+            headers = {
+                "Authorization": f"Bearer {API_KEY}",
+                "HTTP-Referer": "https://your-replit-url.replit.app",
+                "Content-Type": "application/json"
+            }
 
-        data = {
-            "model": "mistral/mistral-7b-instruct",
-            "messages": [{"role": "user", "content": prompt}]
-        }
+            data = {
+                "model": "mistral/mistral-7b-instruct",
+                "messages": [{"role": "user", "content": prompt}]
+            }
 
-        try:
-            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
-            if response.status_code != 200:
-                st.error(f"⚠️ API Error {response.status_code}. Try again later.")
-            else:
-                plan = response.json()['choices'][0]['message']['content']
-                st.markdown("#### Your Personalized Plan 🪄")
-                st.success(plan.strip())
+            try:
+                response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
+                if response.status_code != 200:
+                    st.error(f"⚠️ API Error {response.status_code}. Try again later.")
+                else:
+                    plan = response.json()['choices'][0]['message']['content']
+                    st.markdown("#### Your Personalized Plan 🪄")
+                    st.success(plan.strip())
 
-        except Exception as e:
-            st.error(f"💥 Something went wrong: {e}")
-
-elif st.button("✨ Generate My Plan"):
-    st.warning("Please fill in all the fields before generating your plan.")
+            except Exception as e:
+                st.error(f"💥 Something went wrong: {e}")
+    else:
+        st.warning("Please fill in all the fields before generating your plan.")

@@ -13,6 +13,8 @@ time = st.selectbox("How much time do you have today?", ["15 min", "30 min", "1 
 HUGGINGFACE_API_KEY = st.secrets["HUGGINGFACE_API_KEY"]
 
 def generate_plan(name, goal, mood, time):
+    import requests
+
     prompt = f"""
 You are SelfStarter — a warm, emotionally intelligent AI that feels like a best friend or supportive parent.
 
@@ -22,36 +24,31 @@ You are SelfStarter — a warm, emotionally intelligent AI that feels like a bes
 They have {time} to spare.
 
 Give them:
-- A short, doable plan (2–5 steps max)
-- Only what's most relevant
-- Use simple, calm, encouraging language
-- End with a soft, motivating line (e.g., “You’ve got this.”)
-
-Be real. Be helpful. Be kind.
+- A short, doable plan (2–5 steps)
+- Use calming, encouraging tone
+- End with a gentle motivating message (e.g., “You’ve got this.”)
 """
 
-    API_URL = "https://api-inference.huggingface.co/models/bigscience/bloomz-560m"
-    headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "HTTP-Referer": "https://your-app-url.com",  # Use your Replit or localhost here
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "model": "mistral/mistral-7b-instruct",
+        "messages": [{"role": "user", "content": prompt}]
+    }
+
+    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
+
+    if response.status_code != 200:
+        return f"⚠️ Error: Received status code {response.status_code}. Try again."
 
     try:
-        response = requests.post(API_URL, headers=headers, json={"inputs": prompt}, timeout=30)
-
-        if response.status_code != 200:
-            return f"⚠️ Error: Received status code {response.status_code}. Try again later."
-
-        output = response.json()
-
-        if isinstance(output, dict) and "generated_text" in output:
-            return output["generated_text"]
-        elif isinstance(output, list) and "generated_text" in output[0]:
-            return output[0]["generated_text"]
-        else:
-            return "⚠️ Model responded, but no text was found. Please retry."
-
-    except requests.exceptions.RequestException as e:
-        return f"🚫 Network error: {e}"
+        return response.json()['choices'][0]['message']['content']
     except Exception as e:
-        return f"💥 Unexpected error: {e}"
+        return f"💥 Parsing Error: {e}"
 
 
 
